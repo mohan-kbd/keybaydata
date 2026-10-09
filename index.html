@@ -1,0 +1,597 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="description" content="KeyBay Data tests any search algorithm against your current one and tells you whether to ship it.">
+</head>
+<body>
+<title>KeyBay Data</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Instrument+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: marketing hero on top, then a five-step scroll story. Each step pairs a short plain-language explanation with one small visual. */
+:root{
+  --bg:#F8F9FA; --surface:#FFFFFF; --surface2:#EAEFF2; --ink:#0D1B2A; --muted:#52636F; --line:#D5DDE3;
+  --accent:#1F4FE0; --accent-ink:#FFFFFF; --accent-soft:#E0E8FD;
+  --good:#17804F; --good-soft:#D9F1E4; --bad:#C23A2B; --bad-soft:#FADFDB; --warn:#9A6200; --warn-soft:#F7E7C6;
+  --barA:#9AA9B4; --g0:#1F4FE0; --g1:#17804F; --g2:#B9770E; --g3:#C23A2B; --g4:#7B4FD0;
+  color-scheme:light;
+  --display:'Bricolage Grotesque','Segoe UI',system-ui,sans-serif;
+  --body:'Instrument Sans',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --mono:'DM Mono',ui-monospace,Menlo,monospace;
+}
+
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;padding-inline:16px;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:17px;line-height:1.55}
+.wrap{max-width:1120px;margin-inline:auto}
+a{color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:4px}
+
+/* top bar */
+.nav{display:flex;align-items:center;justify-content:space-between;padding-block:18px}
+.logo{display:flex;align-items:center;gap:10px;font-family:var(--display);font-weight:800;font-size:21px;letter-spacing:-.02em;text-decoration:none}
+.logo svg{width:28px;height:28px}
+.logo span{color:var(--accent)}
+.nav a.link{font-size:15px;color:var(--muted);text-decoration:none;font-weight:500}
+.nav a.link:hover{color:var(--ink)}
+
+/* hero */
+.hero{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:48px;align-items:center;padding-block:clamp(28px,6vw,72px) clamp(40px,7vw,88px)}
+.eyebrow{font-family:var(--mono);font-size:12.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);margin:0 0 14px}
+.hero h1{font-family:var(--display);font-weight:800;font-size:clamp(40px,6.4vw,78px);line-height:.98;letter-spacing:-.035em;margin:0 0 22px;text-wrap:balance}
+.hero h1 em{font-style:normal;color:var(--accent)}
+.hero .sub{font-size:clamp(18px,2vw,21px);color:var(--muted);max-width:50ch;margin:0 0 30px}
+.btn{display:inline-flex;align-items:center;gap:10px;background:var(--accent);color:var(--accent-ink);font:inherit;font-weight:600;font-size:17px;border:0;border-radius:999px;padding:15px 26px;text-decoration:none;cursor:pointer;transition:transform .2s}
+.btn:hover{transform:translateY(2px)}
+.btn svg{width:18px;height:18px;transition:transform .2s}
+.btn:hover svg{transform:translateY(3px)}
+.hero .fine{margin:18px 0 0;font-size:14.5px;color:var(--muted)}
+
+.peek{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:20px;display:grid;gap:14px}
+.peek h2{margin:0;font-family:var(--mono);font-weight:500;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.peek .row{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 14px;border-radius:12px;background:var(--surface2);font-weight:500}
+.peek .row span:first-child{min-width:0}
+.chip{display:inline-flex;align-items:center;gap:5px;font-family:var(--mono);font-size:13px;font-weight:500;border-radius:999px;padding:3px 10px;white-space:nowrap}
+.chip.up{background:var(--good-soft);color:var(--good)}
+.chip.down{background:var(--bad-soft);color:var(--bad)}
+.chip.flat{background:var(--surface);color:var(--muted);border:1px solid var(--line)}
+.peek .verdict{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:14px;border-radius:12px;background:var(--warn-soft);color:var(--warn);font-weight:600}
+.peek .verdict small{font-weight:500;font-size:13.5px;display:block}
+
+/* how it works */
+.how{padding-block:clamp(36px,6vw,72px) 24px;scroll-margin-top:8px}
+.how-head{max-width:640px;margin-bottom:12px}
+.how-head h2{font-family:var(--display);font-weight:800;font-size:clamp(30px,4.4vw,48px);line-height:1.04;letter-spacing:-.025em;margin:0 0 12px;text-wrap:balance}
+.how-head p{margin:0;color:var(--muted);font-size:19px}
+.step{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,6fr);gap:48px;align-items:center;padding-block:clamp(36px,6vw,64px);border-top:1px solid var(--line);scroll-margin-top:8px}
+.step:first-of-type{margin-top:28px}
+.step .tag{display:flex;align-items:center;gap:12px;font-family:var(--mono);font-size:12.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);margin-bottom:12px}
+.step .tag b{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:50%;background:var(--accent);color:var(--accent-ink);font-family:var(--display);font-size:17px;letter-spacing:0}
+.step h3{font-family:var(--display);font-weight:800;font-size:clamp(26px,3.4vw,38px);line-height:1.06;letter-spacing:-.02em;margin:0 0 14px;text-wrap:balance}
+.step p{margin:0;color:var(--muted);max-width:44ch}
+.vis{min-width:0;background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:22px}
+.vis h4{margin:0 0 14px;font-family:var(--mono);font-weight:500;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+
+/* step 1 */
+.groups{display:grid;gap:10px}
+.g{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 12px;align-items:baseline;padding:12px 14px;border-radius:12px;background:var(--surface2)}
+.g b{font-family:var(--display);font-size:17px}
+.g .n{font-family:var(--mono);font-size:13px;color:var(--muted)}
+.g q{grid-column:1/-1;color:var(--muted);font-size:15px;quotes:"\201C" "\201D"}
+.total{margin-top:14px;font-size:15px;color:var(--muted);text-align:right}
+.total b{color:var(--ink);font-family:var(--mono)}
+
+/* steps 2 and 3 */
+.query{display:flex;align-items:center;gap:10px;background:var(--surface2);border-radius:999px;padding:10px 16px;font-size:16px;margin-bottom:16px;min-width:0}
+.query svg{flex:none;width:18px;height:18px;color:var(--muted)}
+.query span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cols{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.col h5{margin:0 0 8px;font-family:var(--display);font-size:16px;display:flex;align-items:center;gap:8px}
+.col h5 i{font-style:normal;font-family:var(--mono);font-size:11px;font-weight:500;border-radius:5px;padding:1px 7px;background:var(--surface2);color:var(--muted)}
+.col.new h5 i{background:var(--accent-soft);color:var(--accent)}
+.res{list-style:none;margin:0;padding:0;display:grid;gap:6px;counter-reset:r}
+.res li{counter-increment:r;display:flex;flex-direction:column;gap:5px;padding:9px 10px 9px 34px;position:relative;border:1px solid var(--line);border-radius:10px;font-size:14.5px;line-height:1.3;min-width:0}
+.res li::before{content:counter(r);position:absolute;left:10px;top:9px;font-family:var(--mono);font-size:12px;color:var(--muted)}
+.rate{align-self:flex-start;display:inline-flex;align-items:center;gap:5px;font-family:var(--mono);font-size:11.5px;font-weight:500;border-radius:999px;padding:1px 9px}
+.rate.great{background:var(--good-soft);color:var(--good)}
+.rate.ok{background:var(--warn-soft);color:var(--warn)}
+.rate.poor{background:var(--bad-soft);color:var(--bad)}
+.tally{margin:12px 0 0;font-size:13.5px;color:var(--muted)}
+.cap{margin:16px 0 0;font-size:14.5px;color:var(--muted)}
+
+/* step 4 scorecard */
+.overall{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 16px;padding-bottom:16px;margin-bottom:6px;border-bottom:1px solid var(--line)}
+.overall .big{font-family:var(--display);font-weight:800;font-size:44px;letter-spacing:-.03em;line-height:1}
+.overall .big s{text-decoration:none;color:var(--muted);font-size:30px}
+.overall .why{flex:1 1 220px;font-size:14.5px;color:var(--muted)}
+.sc{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 12px;align-items:center;padding-block:12px;border-bottom:1px solid var(--line)}
+.sc:last-of-type{border-bottom:0}
+.sc b{font-family:var(--display);font-size:16px}
+.sc .pair{grid-column:1/-1;display:grid;grid-template-columns:42px minmax(0,1fr) 28px;gap:4px 8px;align-items:center;font-family:var(--mono);font-size:12px;color:var(--muted)}
+.track{height:10px;border-radius:5px;background:var(--surface2);overflow:hidden}
+.track i{display:block;height:100%;border-radius:5px;transform-origin:left}
+.track.a i{background:var(--barA)}
+.track.b i{background:var(--accent)}
+.sc.down .track.b i{background:var(--bad)}
+.sc .pair em{font-style:normal;color:var(--ink);text-align:right}
+.play .track i{animation:grow .9s cubic-bezier(.2,.8,.2,1) both}
+.play .track.b i{animation-delay:.2s}
+@keyframes grow{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+
+/* step 5 */
+.fixes{display:grid;gap:10px;margin-bottom:16px}
+.fix{padding:14px 16px;border-radius:12px;background:var(--surface2);display:grid;gap:4px}
+.fix .top{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.fix b{font-family:var(--display);font-size:16px}
+.fix p{margin:0;font-size:15px;color:var(--ink);max-width:none}
+.fix .tip{font-size:13px;font-family:var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--accent);margin-right:6px}
+.decide{border-radius:14px;border:2px solid var(--bad);background:var(--bad-soft);padding:18px}
+.switch{display:inline-grid;grid-template-columns:1fr 1fr;border:1px solid var(--line);border-radius:999px;overflow:hidden;font-family:var(--mono);font-size:13px;font-weight:500;margin-bottom:12px;background:var(--surface)}
+.switch span{padding:5px 16px;color:var(--muted)}
+.switch .on{background:var(--bad);color:var(--surface);font-weight:600}
+.decide h5{margin:0 0 4px;font-family:var(--display);font-size:24px;letter-spacing:-.01em;color:var(--bad)}
+.decide p{margin:0;font-size:15.5px;color:var(--ink);max-width:none}
+.rule{margin:12px 0 0;font-size:14px;color:var(--muted)}
+
+/* closing */
+.close{margin-block:clamp(28px,5vw,56px) 0;padding:clamp(28px,5vw,52px);border-radius:24px;background:var(--ink);color:var(--bg);display:grid;gap:14px;justify-items:start}
+.close h2{margin:0;font-family:var(--display);font-weight:800;font-size:clamp(28px,4.2vw,46px);line-height:1.04;letter-spacing:-.025em;max-width:20ch;text-wrap:balance}
+.close p{margin:0;max-width:52ch;opacity:.8}
+.close .btn{background:var(--bg);color:var(--ink)}
+
+/* contact form */
+.contact{margin-block:clamp(28px,5vw,56px) 0;display:grid;grid-template-columns:minmax(0,5fr) minmax(0,6fr);gap:48px;align-items:start;scroll-margin-top:8px}
+.contact h2{font-family:var(--display);font-weight:800;font-size:clamp(28px,4vw,44px);line-height:1.04;letter-spacing:-.025em;margin:0 0 12px;text-wrap:balance}
+.contact .lead p{margin:0;color:var(--muted);max-width:42ch}
+form.cf{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:22px;display:grid;gap:16px;min-width:0}
+.fld{display:grid;gap:6px;min-width:0}
+.fld label{font-size:14px;font-weight:600}
+.fld label small{font-weight:400;color:var(--muted)}
+.fld input,.fld select,.fld textarea{font:inherit;font-size:16px;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:11px 13px;width:100%;min-width:0}
+.fld textarea{min-height:120px;resize:vertical}
+.fld input:focus-visible,.fld select:focus-visible,.fld textarea:focus-visible{outline:2px solid var(--accent);outline-offset:1px;border-color:var(--accent)}
+.fld [aria-invalid="true"]{border-color:var(--bad)}
+.fld .err{font-size:13.5px;color:var(--bad);min-height:0}
+.two{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.cf .btn{justify-self:start}
+.cf .btn[disabled]{opacity:.6;cursor:default;transform:none}
+.status{margin:0;padding:12px 14px;border-radius:10px;font-size:15px}
+.status.ok{background:var(--good-soft);color:var(--good)}
+.cp{font:inherit;font-size:13px;font-weight:600;margin-left:6px;padding:3px 10px;border-radius:999px;border:1px solid currentColor;background:transparent;color:inherit;cursor:pointer}
+.status.fail{background:var(--warn-soft);color:var(--warn)}
+@media (max-width:860px){.contact{grid-template-columns:minmax(0,1fr);gap:24px}form.cf{padding:16px}}
+@media (max-width:520px){.two{grid-template-columns:minmax(0,1fr)}}
+footer{padding-block:32px 40px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;color:var(--muted);font-size:14px}
+
+@media (max-width:860px){
+  body{font-size:16px}
+  .hero{grid-template-columns:minmax(0,1fr);gap:32px}
+  .step{grid-template-columns:minmax(0,1fr);gap:24px}
+  .vis{padding:16px}
+  .cols{gap:10px}
+  .res li{padding:8px 8px 8px 28px;font-size:13.5px}
+  .res li::before{left:8px;top:8px}
+}
+@media (max-width:420px){
+  .cols{grid-template-columns:minmax(0,1fr)}
+}
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  .play .track i{animation:none}
+  .btn,.btn svg{transition:none}
+}
+
+/* scrollytelling */
+.prog{position:fixed;left:0;top:env(safe-area-inset-top,0px);height:3px;width:0;background:var(--accent);z-index:50}
+.scrolly{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,6fr);gap:56px;align-items:start;margin-top:12px}
+.steps{min-width:0}
+.step{display:flex;align-items:center;min-height:75vh;padding:0;border-top:0;margin:0}
+.step:first-of-type{margin-top:0}
+.st{padding-block:6vh;transition:opacity .4s}
+.js .step .st{opacity:.35}
+.js .step.act .st{opacity:1}
+.stagecol{position:sticky;top:84px;align-self:start;min-width:0}
+.stage{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:20px 22px 22px}
+.stagehead{display:flex;justify-content:space-between;gap:10px;font-family:var(--mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+.stagehead #sttitle{color:var(--accent);text-align:right}
+.pips{display:flex;gap:6px;margin-bottom:18px}
+.pip{flex:1;height:6px;border:0;padding:0;border-radius:3px;background:var(--surface2);cursor:pointer;position:relative;overflow:hidden}
+.pip::after{content:"";position:absolute;inset:0;background:var(--accent);transform:scaleX(0);transform-origin:left;transition:transform .5s}
+.pip.done::after,.pip.cur::after{transform:scaleX(1)}
+.pip.done::after{opacity:.45}
+.stagebody{display:grid}
+.js .stagebody .panel{grid-area:1/1;opacity:0;visibility:hidden;transition:opacity .45s,visibility 0s .45s;min-width:0}
+.js .stagebody .panel.on{opacity:1;visibility:visible;transition:opacity .45s}
+.panel h4{margin:0 0 14px;font-family:var(--mono);font-weight:500;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.panel .res{margin:0}
+.attrs{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:-4px 0 14px;font-size:13px;color:var(--muted)}
+.attrs b{font-weight:500;color:var(--accent);background:var(--accent-soft);border-radius:999px;padding:2px 10px}
+
+/* entrance animation, replays each time a panel switches on */
+@keyframes rise{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+@keyframes slideL{from{opacity:0;transform:translateX(-22px)}to{opacity:1;transform:none}}
+@keyframes slideR{from{opacity:0;transform:translateX(22px)}to{opacity:1;transform:none}}
+@keyframes stamp{0%{opacity:0;transform:scale(1.9)}60%{opacity:1;transform:scale(.92)}100%{opacity:1;transform:none}}
+@keyframes pop{from{opacity:0;transform:scale(.4)}to{opacity:1;transform:none}}
+@keyframes flashbad{0%,100%{background:transparent}35%{background:var(--bad-soft)}}
+@keyframes flashgood{0%,100%{background:transparent}35%{background:var(--good-soft)}}
+@keyframes thumb{to{transform:translateX(100%)}}
+@keyframes lit{to{color:var(--surface)}}
+@keyframes alarm{from{background:var(--surface2);border-color:var(--line)}to{background:var(--bad-soft);border-color:var(--bad)}}
+@keyframes dot{from{opacity:0;transform:scale(0)}to{opacity:1;transform:none}}
+
+.js .panel:not(.on) .a,.js .panel:not(.on) .rate,.js .panel:not(.on) .d{opacity:0}
+.js .panel.on .a{animation:rise .6s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(var(--i,0)*.1s + .1s)}
+.js .panel.on .res.l .a{animation-name:slideL}
+.js .panel.on .res.r .a{animation-name:slideR}
+.js .panel.on .res .a{animation-delay:calc(var(--i,0)*.12s + .1s)}
+.js .panel.on .rate{animation:stamp .45s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(var(--i,0)*.3s + .3s)}
+.js .panel.on .tally.a,.js .panel.on .cap.a{animation-delay:calc(var(--i,0)*.12s + 2.4s)}
+
+/* panel 1 dots */
+.pool{display:grid;grid-template-columns:repeat(25,1fr);gap:4px;margin-bottom:16px}
+.pool .d{aspect-ratio:1;border-radius:50%;background:var(--c);display:block}
+.pool .g0{--c:var(--g0)}.pool .g1{--c:var(--g1)}.pool .g2{--c:var(--g2)}.pool .g3{--c:var(--g3)}.pool .g4{--c:var(--g4)}
+.js .panel.on .pool .d{animation:dot .35s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(var(--n)*12ms)}
+.g{position:relative;padding-left:20px}
+.g::before{content:"";position:absolute;left:0;top:12px;bottom:12px;width:5px;border-radius:3px;background:var(--c)}
+.groups{gap:8px}
+
+/* panel 4 */
+.sc{padding-inline:8px;margin-inline:-8px;border-radius:10px;border-bottom:0}
+.js .panel:not(.on) .track i{transform:scaleX(0)}
+.js .panel.on .track i{animation:grow .9s cubic-bezier(.2,.8,.2,1) both}
+.js .panel.on .track.a i{animation-delay:calc(var(--i)*.22s + .3s)}
+.js .panel.on .track.b i{animation-delay:calc(var(--i)*.22s + .55s)}
+.js .panel:not(.on) .sc .chip{opacity:0}
+.js .panel.on .sc .chip{animation:pop .4s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(var(--i)*.22s + 1.35s)}
+.js .panel.on .sc.down{animation:flashbad 1.4s ease both;animation-delay:calc(var(--i)*.22s + 1.5s)}
+.js .panel.on .sc.up{animation:flashgood 1.2s ease both;animation-delay:calc(var(--i)*.22s + 1.5s)}
+.js .panel:not(.on) .sc .pair em{opacity:0}
+.js .panel.on .sc .pair em{animation:pop .3s both;animation-delay:calc(var(--i)*.22s + 1.0s)}
+
+/* panel 5 */
+.switch{position:relative;isolation:isolate}
+.switch::before{content:"";position:absolute;z-index:-1;left:0;top:0;bottom:0;width:50%;background:var(--bad);border-radius:999px}
+.switch span,.switch .on{background:transparent}
+.switch .no{color:var(--surface);font-weight:600}
+.switch .go{color:var(--muted)}
+.js .panel:not(.on) .switch::before{transform:none;background:var(--good)}
+.js .panel:not(.on) .switch .go{color:var(--surface);font-weight:600}
+.js .panel:not(.on) .switch .no{color:var(--muted);font-weight:400}
+.js .panel.on .switch::before{animation:thumbc .5s ease 1.3s both}
+@keyframes thumbc{from{transform:none;background:var(--good)}to{transform:translateX(100%);background:var(--bad)}}
+.js .panel.on .switch .go{animation:dim .2s 1.35s both}
+.js .panel.on .switch .no{animation:lit2 .2s 1.4s both}
+@keyframes dim{from{color:var(--surface);font-weight:600}to{color:var(--muted);font-weight:400}}
+@keyframes lit2{from{color:var(--muted);font-weight:400}to{color:var(--surface);font-weight:600}}
+.js .panel.on .decide{animation:rise .6s cubic-bezier(.2,.8,.2,1) both,alarm .5s ease 1.4s both;animation-delay:.3s,1.4s}
+.js .panel.on .decide h5{animation:stamp .5s cubic-bezier(.2,.8,.2,1) 1.6s both}
+.js .panel:not(.on) .decide h5{opacity:0}
+.decide{background:var(--bad-soft)}
+
+.decide p.rule{margin-top:12px}
+/* hero entrance */
+.js .hero .a{animation:rise .7s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(var(--i,0)*.12s + .1s)}
+.js .peek .verdict.a{animation-name:stamp}
+
+@media (max-width:860px){
+  .scrolly{display:block}
+  .stagecol{display:none}
+  .step{display:block;min-height:0;border-top:1px solid var(--line);padding-block:32px}
+  .step .st{padding-block:0;opacity:1!important}
+  .step .panel{margin-top:22px;background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:16px}
+  .pool{grid-template-columns:repeat(20,1fr)}
+}
+@media (max-width:520px){.step .panel .cols{grid-template-columns:minmax(0,1fr)}}
+@media (prefers-reduced-motion:reduce){
+  .js .a,.js .rate,.js .d,.js .sc .chip,.js .sc .pair em,.js .decide h5{animation:none!important;opacity:1!important;transform:none!important}
+  .js .track i{animation:none!important;transform:none!important}
+  .js .panel .sc,.js .panel .decide,.js .panel .switch::before{animation:none!important}
+  .st{transition:none}
+}
+
+/* full-width separator above the walkthrough */
+body{overflow-x:clip}
+.how{padding-block:0 24px}
+.how-head{max-width:none;width:100vw;margin:0 0 24px calc(50% - 50vw);padding:clamp(40px,7vw,80px) 16px;background:var(--surface2);border-block:1px solid var(--line);text-align:center;display:grid;justify-items:center;gap:12px}
+.how-head h2{max-width:20ch;font-size:clamp(32px,5.2vw,60px);margin:0}
+.how-head p{max-width:46ch;margin:0}
+.scrolly{margin-top:0}
+/* last step holds the card in place until its section reaches the top of the screen */
+.step:last-of-type{min-height:100vh;align-items:flex-start}
+.step:last-of-type .st{padding-top:22vh}
+@media (max-width:860px){.step:last-of-type{min-height:0}.step:last-of-type .st{padding-top:0}}
+</style>
+
+<script>document.documentElement.classList.add("js")</script>
+<div class="prog" id="prog" aria-hidden="true"></div>
+<div class="wrap">
+  <header class="nav">
+    <a class="logo" href="#top" aria-label="KeyBay Data home">
+      <svg viewBox="0 0 28 28" aria-hidden="true"><rect width="28" height="28" rx="8" fill="var(--accent)"/><circle cx="10" cy="12" r="4" fill="none" stroke="var(--accent-ink)" stroke-width="2.4"/><path d="M13.5 13.5h9M19 13.5v4M22.5 13.5v3" stroke="var(--accent-ink)" stroke-width="2.4" stroke-linecap="round" fill="none"/><path d="M5 21.5c3-2 6-2 9 0s6 2 9 0" stroke="var(--accent-ink)" stroke-width="2" stroke-linecap="round" fill="none" opacity=".7"/></svg>
+      Key<span>Bay</span> Data
+    </a>
+    <a class="link" href="#how">How it works</a>
+  </header>
+
+  <main id="top">
+    <section class="hero" aria-labelledby="h1">
+      <div>
+        <p class="eyebrow a" style="--i:0">Search quality testing</p>
+        <h1 id="h1" class="a" style="--i:1">Is your search any good? <em>Is every launch making it better?</em></h1>
+        <p class="sub a" style="--i:2">KeyBay Data tests any search algorithm against the one you run today, shows exactly what got better and what got worse, and tells you whether to ship it.</p>
+        <a class="btn a" style="--i:3" href="#how">See how it works
+          <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 3v13M4.5 10.5 10 16l5.5-5.5"/></svg>
+        </a>
+        <p class="fine">Works for any kind of search: products, documents, jobs, help articles, people.</p>
+      </div>
+
+      <aside class="peek" aria-label="Example result">
+        <h2>Example scorecard</h2>
+        <div class="row a" style="--i:1"><span>Vague questions</span><span class="chip up">▲ Better</span></div>
+        <div class="row a" style="--i:2"><span>Long questions</span><span class="chip up">▲ Better</span></div>
+        <div class="row a" style="--i:3"><span>Misspelled words</span><span class="chip down">▼ Worse</span></div>
+        <div class="verdict a" style="--i:5"><span>Decision<small>Fix 1 thing, then re-test</small></span><span>NO-GO for now</span></div>
+      </aside>
+    </section>
+
+    <section class="how" id="how" aria-labelledby="how-h">
+      <div class="how-head">
+        <h2 id="how-h">From &ldquo;is it better?&rdquo; to a clear answer in five steps</h2>
+        <p>Here is what we do, using a made-up example. Keep scrolling and watch it play out.</p>
+      </div>
+
+      <div class="scrolly">
+        <div class="steps">
+          <article class="step" id="s1"><div class="st">
+            <div class="tag"><b>1</b>Choose the searches</div>
+            <h3>Start with real searches from real people</h3>
+            <p>We pick a sample of searches from your logs and sort them by type, so short lookups, long questions and messy typing all get tested.</p>
+          </div></article>
+          <article class="step" id="s2"><div class="st">
+            <div class="tag"><b>2</b>Run both versions</div>
+            <h3>Ask the old and new search the same questions</h3>
+            <p>Every search runs through your current algorithm and the new one at the same time. We save the top results from each, side by side.</p>
+          </div></article>
+          <article class="step" id="s3"><div class="st">
+            <div class="tag"><b>3</b>Rate every result</div>
+            <h3>Custom rubrics and LLM-assisted grading, like a careful reviewer</h3>
+            <p>We write scoring rubrics for your kind of search, covering several attributes such as relevance, completeness and freshness. An LLM then helps grade every result against them, the way a careful reviewer would, without knowing which version produced it.</p>
+          </div></article>
+          <article class="step" id="s4"><div class="st">
+            <div class="tag"><b>4</b>Read the scorecard</div>
+            <h3>See where it improved and where it got worse</h3>
+            <p>One overall number can hide problems. So the scorecard breaks results out by type of search and flags every group that moved up or down.</p>
+          </div></article>
+          <article class="step" id="s5"><div class="st">
+            <div class="tag"><b>5</b>Fix it, then decide</div>
+            <h3>Get a plain go or no-go, with a fix list</h3>
+            <p>For every group that got worse, you get a likely cause and a tip to fix it. Then we give you one clear decision on whether the new algorithm is ready to ship.</p>
+          </div></article>
+        </div>
+
+        <div class="stagecol" id="stagecol">
+          <div class="stage">
+            <div class="stagehead"><span id="stlabel">Step 1 of 5</span><span id="sttitle">Choose the searches</span></div>
+            <div class="pips" role="tablist" aria-label="Steps">
+              <button class="pip" type="button" aria-label="Go to step 1"></button><button class="pip" type="button" aria-label="Go to step 2"></button><button class="pip" type="button" aria-label="Go to step 3"></button><button class="pip" type="button" aria-label="Go to step 4"></button><button class="pip" type="button" aria-label="Go to step 5"></button>
+            </div>
+            <div class="stagebody" id="stagebody">
+
+              <div class="panel" data-title="Choose the searches">
+                <h4>A sample of <span data-count="1000">1,000</span> searches</h4>
+                <div class="pool" id="pool" aria-hidden="true"></div>
+                <div class="groups">
+<div class="g a" style="--i:1;--c:var(--g0)"><b>Short and exact</b><span class="n">200</span><q>invoice 48213</q></div>
+<div class="g a" style="--i:2;--c:var(--g1)"><b>Long and wordy</b><span class="n">200</span><q>how do I cancel without losing my data</q></div>
+<div class="g a" style="--i:3;--c:var(--g2)"><b>Vague</b><span class="n">200</span><q>something good to read on a long flight</q></div>
+<div class="g a" style="--i:4;--c:var(--g3)"><b>Rare and niche</b><span class="n">200</span><q>left handed violin teacher</q></div>
+<div class="g a" style="--i:5;--c:var(--g4)"><b>Misspelled</b><span class="n">200</span><q>accomodation policy</q></div>
+                </div>
+              </div>
+
+              <div class="panel" data-title="Run both versions">
+                <h4>One search, two sets of results</h4>
+                <div class="query a" style="--i:0"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="8.5" cy="8.5" r="5.5"/><path d="m13 13 4 4"/></svg><span>how do I cancel without losing my data</span></div>
+                <div class="cols">
+                  <div class="col"><h5 class="a" style="--i:1">Current <i>A</i></h5>
+                    <ol class="res l">
+<li class="a" style="--i:2">Pricing and plans</li>
+<li class="a" style="--i:3">Cancel your subscription</li>
+<li class="a" style="--i:4">Billing questions</li>
+<li class="a" style="--i:5">Export your data</li>
+<li class="a" style="--i:6">Account security</li>
+                    </ol>
+                  </div>
+                  <div class="col new"><h5 class="a" style="--i:1">New <i>B</i></h5>
+                    <ol class="res r">
+<li class="a" style="--i:2">Cancel and keep your data</li>
+<li class="a" style="--i:3">Export your data</li>
+<li class="a" style="--i:4">Cancel your subscription</li>
+<li class="a" style="--i:5">Pause instead of cancel</li>
+<li class="a" style="--i:6">Delete your account</li>
+                    </ol>
+                  </div>
+                </div>
+              </div>
+
+              <div class="panel" data-title="Rate every result">
+                <h4>Same search, now graded</h4>
+                <div class="attrs a" style="--i:0"><span>Graded on</span><b>Relevance</b><b>Completeness</b><b>Freshness</b></div>
+                <div class="cols">
+                  <div class="col"><h5>Current <i>A</i></h5>
+                    <ol class="res">
+<li>Pricing and plans<span class="rate poor" style="--i:0">○ Poor</span></li>
+<li>Cancel your subscription<span class="rate ok" style="--i:1">◐ Okay</span></li>
+<li>Billing questions<span class="rate poor" style="--i:2">○ Poor</span></li>
+<li>Export your data<span class="rate great" style="--i:3">● Great</span></li>
+<li>Account security<span class="rate poor" style="--i:4">○ Poor</span></li>
+
+                    </ol>
+                    <p class="tally a" style="--i:12">1 Great, 1 Okay, 3 Poor</p>
+                  </div>
+                  <div class="col new"><h5>New <i>B</i></h5>
+                    <ol class="res">
+<li>Cancel and keep your data<span class="rate great" style="--i:5">● Great</span></li>
+<li>Export your data<span class="rate great" style="--i:6">● Great</span></li>
+<li>Cancel your subscription<span class="rate ok" style="--i:7">◐ Okay</span></li>
+<li>Pause instead of cancel<span class="rate ok" style="--i:8">◐ Okay</span></li>
+<li>Delete your account<span class="rate poor" style="--i:9">○ Poor</span></li>
+
+                    </ol>
+                    <p class="tally a" style="--i:13">2 Great, 2 Okay, 1 Poor</p>
+                  </div>
+                </div>
+                <p class="cap a" style="--i:14">Repeat for all 1,000 searches, and every group gets a score out of 100.</p>
+              </div>
+
+              <div class="panel" data-title="Read the scorecard">
+                <h4>Scorecard: current vs new</h4>
+                <div class="overall">
+                  <div class="big"><span data-count="71">71</span> <s>&rarr;</s> <span data-count="74">74</span></div>
+                  <div class="why a" style="--i:8">Overall, a small gain. But one group got clearly worse, and that is hidden in the average.</div>
+                </div>
+<div class="sc up" style="--i:0"><b>Vague</b><span class="chip up">▲ Better +14</span>
+<div class="pair"><span>Current</span><div class="track a"><i style="width:57%"></i></div><em>57</em><span>New</span><div class="track b"><i style="width:71%"></i></div><em>71</em></div></div>
+<div class="sc up" style="--i:1"><b>Long and wordy</b><span class="chip up">▲ Better +13</span>
+<div class="pair"><span>Current</span><div class="track a"><i style="width:64%"></i></div><em>64</em><span>New</span><div class="track b"><i style="width:77%"></i></div><em>77</em></div></div>
+<div class="sc flat" style="--i:2"><b>Short and exact</b><span class="chip flat">● Same +1</span>
+<div class="pair"><span>Current</span><div class="track a"><i style="width:90%"></i></div><em>90</em><span>New</span><div class="track b"><i style="width:91%"></i></div><em>91</em></div></div>
+<div class="sc flat" style="--i:3"><b>Rare and niche</b><span class="chip flat">● Same +2</span>
+<div class="pair"><span>Current</span><div class="track a"><i style="width:66%"></i></div><em>66</em><span>New</span><div class="track b"><i style="width:68%"></i></div><em>68</em></div></div>
+<div class="sc down" style="--i:4"><b>Misspelled</b><span class="chip down">▼ Worse &minus;13</span>
+<div class="pair"><span>Current</span><div class="track a"><i style="width:78%"></i></div><em>78</em><span>New</span><div class="track b"><i style="width:65%"></i></div><em>65</em></div></div>
+              </div>
+
+              <div class="panel" data-title="Fix it, then decide">
+                <h4>What to fix</h4>
+                <div class="fixes">
+                  <div class="fix a" style="--i:0">
+                    <div class="top"><b>Misspelled searches</b><span class="chip down">▼ &minus;13</span></div>
+                    <p><span class="tip">Tip</span>The new version stopped correcting typos. Turn spell correction back on before it ranks results.</p>
+                  </div>
+                </div>
+                <h4>The decision</h4>
+                <div class="decide a" style="--i:1">
+                  <div class="switch" role="img" aria-label="Decision: No-go"><span class="go">GO</span><span class="no">NO-GO</span></div>
+                  <h5>Not ready to ship yet</h5>
+                  <p>Big wins on vague and long searches, but misspelled searches got worse. Apply the fix, re-run the same 1,000 searches, and it turns into a GO.</p>
+                  <p class="rule">Our rule: ship only when no group of searches gets noticeably worse.</p>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="close" aria-labelledby="close-h">
+      <h2 id="close-h">Ship search changes with confidence</h2>
+      <p>Bring us your current search and the one you want to launch. We will send back a scorecard like this one, built on your own searches.</p>
+      <a class="btn" href="#contact">Get your scorecard</a>
+    </section>
+
+    <section class="contact" id="contact" aria-labelledby="contact-h">
+      <div class="lead">
+        <p class="eyebrow">Contact us</p>
+        <h2 id="contact-h">Tell us about your search</h2>
+        <p>Share a few details and what you want to compare. This opens an email to info@keybaydata.com, and we will reply with next steps for your scorecard.</p>
+      </div>
+      <form class="cf" id="cf" novalidate>
+        <div class="two">
+          <div class="fld"><label for="cf-name">Name</label><input id="cf-name" name="name" type="text" autocomplete="name" required><span class="err" id="cf-name-e" aria-live="polite"></span></div>
+          <div class="fld"><label for="cf-email">Work email</label><input id="cf-email" name="email" type="email" autocomplete="email" required><span class="err" id="cf-email-e" aria-live="polite"></span></div>
+        </div>
+        <div class="two">
+          <div class="fld"><label for="cf-co">Company <small>(optional)</small></label><input id="cf-co" name="company" type="text" autocomplete="organization"></div>
+          <div class="fld"><label for="cf-type">What do you search?</label>
+            <select id="cf-type" name="type"><option>Products</option><option>Documents or help articles</option><option>Jobs or listings</option><option>People or records</option><option>Something else</option></select></div>
+        </div>
+        <div class="fld"><label for="cf-msg">How can we help?</label><textarea id="cf-msg" name="message" required></textarea><span class="err" id="cf-msg-e" aria-live="polite"></span></div>
+        <button class="btn" type="submit" id="cf-go">Email us this message</button>
+        <p class="status" id="cf-status" role="status" hidden></p>
+      </form>
+    </section>
+  </main>
+
+  <footer>
+    <span>&copy; 2026 KeyBay Data</span>
+    <span>Search quality testing for any search</span>
+  </footer>
+</div>
+
+<script>
+(function(){
+  var reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var mq=matchMedia('(max-width:860px)');
+  var steps=[].slice.call(document.querySelectorAll('.step'));
+  var panels=[].slice.call(document.querySelectorAll('.panel'));
+  var body=document.getElementById('stagebody');
+  var pips=[].slice.call(document.querySelectorAll('.pip'));
+  var lab=document.getElementById('stlabel'),ttl=document.getElementById('sttitle');
+  var cur=-1;
+
+  var pool=document.getElementById('pool');
+  if(pool){for(var g=0;g<5;g++)for(var k=0;k<20;k++){var d=document.createElement('i');d.className='d g'+g;d.style.setProperty('--n',g*20+k);pool.appendChild(d);}}
+
+  function place(){panels.forEach(function(p,i){(mq.matches?steps[i]:body).appendChild(p);});}
+  place();
+
+  function fmt(n){try{return n.toLocaleString('en-US');}catch(e){return String(n);}}
+  function count(p){
+    [].forEach.call(p.querySelectorAll('[data-count]'),function(el){
+      var to=+el.getAttribute('data-count');
+      if(reduce){el.textContent=fmt(to);return;}
+      var t0=null,dur=1000;el.textContent='0';
+      function f(t){if(t0===null)t0=t;var k=Math.min(1,(t-t0)/dur);k=1-Math.pow(1-k,3);el.textContent=fmt(Math.round(to*k));if(k<1)requestAnimationFrame(f);}
+      requestAnimationFrame(f);
+    });
+  }
+  function turnOn(p){if(!p.classList.contains('on')){p.classList.add('on');count(p);}}
+
+  function setActive(i){
+    if(i===cur)return;cur=i;
+    panels.forEach(function(p,j){if(j===i)turnOn(p);else p.classList.remove('on');});
+    steps.forEach(function(s,j){s.classList.toggle('act',j===i);});
+    pips.forEach(function(x,j){x.classList.toggle('cur',j===i);x.classList.toggle('done',j<i);});
+    lab.textContent='Step '+(i+1)+' of 5';ttl.textContent=panels[i].getAttribute('data-title');
+  }
+
+  if('IntersectionObserver' in window){
+    var io2=new IntersectionObserver(function(es){
+      if(!mq.matches)return;
+      es.forEach(function(e){if(e.isIntersecting)turnOn(e.target);});
+    },{threshold:.3});
+    panels.forEach(function(p){io2.observe(p);});
+
+  }else{panels.forEach(turnOn);}
+
+
+  var stage=document.querySelector('.stagecol');
+  function sync(){
+    if(mq.matches)return;
+    var mid=innerHeight/2,best=0,bd=1e9;
+    steps.forEach(function(st,i){var r=st.getBoundingClientRect(),c=r.top+r.height/2,dd=Math.abs(c-mid);if(dd<bd){bd=dd;best=i;}});
+    var first=steps[0].getBoundingClientRect(),last=steps[4].getBoundingClientRect();
+    if(first.top>innerHeight*.75||last.bottom<innerHeight*.25){return;}
+    setActive(best);
+    var h=stage.firstElementChild.offsetHeight;
+    stage.style.top=Math.max(12,(innerHeight-h)/2)+'px';
+  }
+  function onMq(){place();cur=-1;panels.forEach(function(p){p.classList.remove('on');});if(!mq.matches)setActive(0);}
+  if(mq.addEventListener)mq.addEventListener('change',onMq);else if(mq.addListener)mq.addListener(onMq);
+
+  pips.forEach(function(b,i){b.addEventListener('click',function(){steps[i].scrollIntoView({behavior:reduce?'auto':'smooth',block:'center'});});});
+
+  var prog=document.getElementById('prog');
+  function onScroll(){var h=document.documentElement.scrollHeight-innerHeight;prog.style.width=(h>0?Math.min(100,scrollY/h*100):0)+'%';}
+  addEventListener('scroll',function(){onScroll();sync();},{passive:true});addEventListener('resize',sync);onScroll();sync();
+})();
+</script>
+
+</body>
+</html>
